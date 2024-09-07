@@ -1,12 +1,6 @@
-import ExtendedBaseEntity from "src/base-entity";
 import { Column, Entity } from "typeorm";
-
-
-enum userRole {
-  ADMIN = "admin",
-  VENDOR = "vendor",
-  CUSTOMER = "customer"
-};
+import { userRole } from "../enums";
+import ExtendedBaseEntity from "../base-entity";
 
 
 @Entity({name: "users"})
@@ -32,7 +26,7 @@ class User extends ExtendedBaseEntity {
   @Column({
     type: "varchar",
     array: true,
-    default: userRole.CUSTOMER
+    default: [userRole.CUSTOMER]
   })
   user_role: userRole[]
 }
