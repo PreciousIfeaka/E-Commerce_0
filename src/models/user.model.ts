@@ -2,33 +2,33 @@ import { Column, Entity } from "typeorm";
 import { userRole } from "../enums";
 import ExtendedBaseEntity from "../base-entity";
 
-
-@Entity({name: "users"})
-class User extends ExtendedBaseEntity {
-  @Column({"nullable": false})
+@Entity({ name: "users" })
+export class User extends ExtendedBaseEntity {
+  @Column({ nullable: false })
   first_name: string;
 
-  @Column({"nullable": false})
+  @Column({ nullable: false })
   last_name: string;
 
-  @Column({"unique": true})
+  @Column({ unique: true })
   email: string;
 
-  @Column({"nullable": true})
+  @Column({ nullable: true })
   password: string;
 
-  @Column({"nullable": true})
+  @Column({})
+  phone: string;
+
+  @Column({ nullable: true })
   avatar_url: string;
 
-  @Column({"default": false})
+  @Column({ default: false })
   is_verified: boolean;
 
   @Column({
     type: "varchar",
     array: true,
-    default: [userRole.CUSTOMER]
+    default: [userRole.CUSTOMER],
   })
-  user_role: userRole[]
+  user_role: userRole[];
 }
-
-export default User;
