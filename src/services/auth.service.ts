@@ -98,15 +98,11 @@ export class AuthService implements IAuthService {
         };
       }
 
-      user.is_verified = true;
-      console.log(user);
-      await this.userRepository.save(user);
-
+      await this.userRepository.update(user_id, { is_verified: true });
       return {
         message: "Successful email verification",
       };
     } catch (error) {
-      console.log(error);
       if ((error as Error).name === "TokenExpiredError") {
         throw new HttpError(400, "Verification token has expired");
       }

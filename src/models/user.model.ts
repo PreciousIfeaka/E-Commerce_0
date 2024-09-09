@@ -27,11 +27,10 @@ export class User extends ExtendedBaseEntity {
 
   @Column({
     type: "enum",
-    array: true,
     enum: userRole,
-    default: [userRole.CUSTOMER],
+    default: userRole.CUSTOMER,
   })
-  user_role: userRole[];
+  user_role: userRole;
 
   @Column({ nullable: false })
   otp: number;
