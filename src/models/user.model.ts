@@ -16,7 +16,7 @@ export class User extends ExtendedBaseEntity {
   @Column({ nullable: true })
   password: string;
 
-  @Column({})
+  @Column({ nullable: true })
   phone: string;
 
   @Column({ nullable: true })
@@ -26,8 +26,9 @@ export class User extends ExtendedBaseEntity {
   is_verified: boolean;
 
   @Column({
-    type: "varchar",
+    type: "enum",
     array: true,
+    enum: userRole,
     default: [userRole.CUSTOMER],
   })
   user_role: userRole[];
@@ -35,6 +36,6 @@ export class User extends ExtendedBaseEntity {
   @Column({ nullable: false })
   otp: number;
 
-  @Column({ nullable: false })
+  @Column({ type: "timestamp", nullable: false })
   otp_expiredAt: Date;
 }

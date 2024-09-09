@@ -77,7 +77,9 @@ export class AuthService implements IAuthService {
         throw new Unauthorized("Invalid token");
       }
 
-      const user = await this.userRepository.findOneBy({ id: decoded.user_id });
+      const user_id = decoded.user_id;
+
+      const user = await this.userRepository.findOneBy({ id: user_id });
 
       if (!user) {
         return {
@@ -90,17 +92,21 @@ export class AuthService implements IAuthService {
           message: "Invalid OTP",
         };
       } else if (user.otp_expiredAt < new Date()) {
+        await this.userRepository.delete(user.id);
         return {
           message: "OTP has expired",
         };
       }
 
       user.is_verified = true;
+      console.log(user);
+      await this.userRepository.save(user);
 
       return {
         message: "Successful email verification",
       };
     } catch (error) {
+      console.log(error);
       if ((error as Error).name === "TokenExpiredError") {
         throw new HttpError(400, "Verification token has expired");
       }
@@ -110,34 +116,44 @@ export class AuthService implements IAuthService {
       throw new ServerError((error as Error).message);
     }
   }
+
   public async signin(payload: ISigninPayload) {
     const { email, password } = payload;
 
-    const userExists = await this.userRepository.findOneBy({ email });
+    try {
+      const userExists = await this.userRepository.findOneBy({ email });
 
-    if (!userExists) {
-      throw new ResourceNotFound("Not a signed up user");
+      if (!userExists) {
+        throw new ResourceNotFound("Not a signed up user");
+      }
+
+      const passwordMatch = await bcrypt.compare(password, userExists.password);
+
+      if (!passwordMatch) {
+        throw new Conflict("Incorrect password");
+      }
+      if (!userExists.is_verified) {
+        throw new Unauthorized("User email is not verified");
+      }
+
+      const access_token = jwt.sign(
+        { user_id: userExists.id },
+        config.AUTH_SECRET as Secret,
+        { expiresIn: config.AUTH_TOKEN_EXPIRY },
+      );
+
+      const { password: _, otp: __, ...rest } = userExists;
+
+      return {
+        message: "User signed in succefully",
+        user: rest,
+        access_token,
+      };
+    } catch (error) {
+      if (error instanceof HttpError) {
+        throw error;
+      }
+      throw new ServerError((error as Error).message);
     }
-
-    const passwordMatch = await bcrypt.compare(password, userExists.password);
-
-    if (!passwordMatch) {
-      throw new Conflict("Incorrect password");
-    }
-    if (!userExists.is_verified) {
-      throw new Unauthorized("User email is not verified");
-    }
-
-    const access_token = jwt.sign(
-      { user_id: userExists.id },
-      config.AUTH_SECRET as Secret,
-      { expiresIn: config.AUTH_TOKEN_EXPIRY },
-    );
-
-    return {
-      message: "User signed in succefully",
-      user: userExists,
-      access_token,
-    };
   }
 }
