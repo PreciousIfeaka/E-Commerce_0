@@ -4,7 +4,6 @@ import jwt, { Secret } from "jsonwebtoken";
 import nodemailer, { SendMailOptions } from "nodemailer";
 import { ServerError } from "../middleware";
 import log from "./logger";
-import { resolve } from "path";
 
 export const generateOTP = (digit: number): number => {
   const power = Math.pow(10, digit - 1);

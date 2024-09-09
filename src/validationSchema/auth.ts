@@ -16,8 +16,23 @@ const verifyEmailSchema = z.object({
   otp: z
     .number()
     .int()
-    .min(100000, "otp must be at least 6 digits")
-    .max(999999, "otp must be at most 6 digits"),
+    .min(100000, "must be at least 6 digits")
+    .max(999999, "must be at most 6 digits"),
 });
 
-export { signinSchema, signupSchema, verifyEmailSchema };
+const forgotPasswordSchema = z.object({
+  email: z.string().email("Invalid email address"),
+});
+
+const resetPasswordSchema = z.object({
+  newPassword: z.string().min(8, "less than 8 characters long"),
+  confirmPassword: z.string().min(8, "less than 8 characters long"),
+});
+
+export {
+  signinSchema,
+  signupSchema,
+  verifyEmailSchema,
+  forgotPasswordSchema,
+  resetPasswordSchema,
+};

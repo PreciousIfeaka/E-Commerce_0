@@ -2,6 +2,7 @@ import { Repository } from "typeorm";
 import {
   Conflict,
   HttpError,
+  InvalidInput,
   ResourceNotFound,
   ServerError,
   Unauthorized,
@@ -46,9 +47,9 @@ export class AuthService implements IAuthService {
         form: '"Precious Enuagwune" <preciousifeaka@gmail.com>',
         to: email,
         subject: "Email Verification",
-        html: `<h2>${user.first_name}! Welcome to E-Commerce.</h2>
-              <h4>Verify your email to continue...</h4>
-              <h4>Your one-time password is ${user.otp}.</h4>
+        html: `<h4>${user.first_name}! Welcome to E-Commerce.</h4>
+              <p>Verify your email to continue...</p>
+              <p>Your one-time password is ${user.otp}.</p>
               <a href="${config.BASE_URL}/auth/verify-email?token=${access_token}"> Verify your email </a>
             `,
       };
@@ -151,5 +152,83 @@ export class AuthService implements IAuthService {
       }
       throw new ServerError((error as Error).message);
     }
+  }
+
+  public async forgotPassword(email: string) {
+    try {
+      const user = await this.userRepository.findOneBy({ email });
+
+      if (!user) {
+        throw new ResourceNotFound("User not found");
+      }
+
+      const reset_token = generateAccessToken(user);
+
+      const mailData = {
+        form: "no-reply@gmail.com <preciousifeaka@gmail.com>",
+        to: email,
+        subject: "Reset Password Instructions",
+        html: `<h4>Hello ${user.first_name}!</h4>
+              <p>Someone has requested a link to change your password. You can do this through the link below.</p>
+              <a href="${config.BASE_URL}/auth/password/edit?token=${reset_token}"> Change my password </a>
+              <p>or copy and open this link in your browser: <a href="${config.BASE_URL}/auth/password/edit?token=${reset_token}">${config.BASE_URL}/auth/password/edit?token=${reset_token}</a></p>
+              <p>If you didn't request this, please ignore this email.</p>
+              <p>Your password won't change until you access the link above and create a new one</p>
+            `,
+      };
+
+      await sendEmail(mailData);
+
+      return {
+        message: "Email successfully sent",
+      };
+    } catch (error) {
+      if (error instanceof HttpError) {
+        throw error;
+      }
+      throw new ServerError((error as Error).message);
+    }
+  }
+
+  public async resetPassword(
+    token: string,
+    newPassword: string,
+    confirmPassword: string,
+  ): Promise<{
+    message: string;
+    user: Partial<User>;
+  }> {
+    const decoded: any = jwt.verify(token, config.AUTH_SECRET as Secret);
+
+    if (!decoded) {
+      throw new Unauthorized("Invalid token");
+    }
+
+    const user = await this.userRepository.findOneBy({ id: decoded.user_id });
+
+    if (!user) {
+      throw new ResourceNotFound("User not found");
+    }
+
+    if (newPassword !== confirmPassword) {
+      throw new InvalidInput("passwords mismatch");
+    }
+
+    const passwordsMatch = await bcrypt.compare(newPassword, user.password);
+
+    if (passwordsMatch) {
+      throw new Conflict("Same password entry as old password");
+    }
+
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+    await this.userRepository.update(user.id, { password: hashedPassword });
+
+    const { password: _, otp: __, ...rest } = user;
+
+    return {
+      message: "Successful password reset",
+      user: rest,
+    };
   }
 }

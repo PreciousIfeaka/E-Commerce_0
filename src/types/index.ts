@@ -31,4 +31,17 @@ export interface IAuthService {
     user: Partial<User>;
     access_token: string;
   }>;
+
+  forgotPassword(email: string): Promise<{
+    message: string;
+  }>;
+
+  resetPassword(
+    oldPassword: string,
+    newPassword: string,
+    confirmPassword: string,
+  ): Promise<{
+    message: string;
+    user: Partial<User>;
+  }>;
 }

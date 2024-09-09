@@ -23,4 +23,18 @@ const signin = asyncHandler(async (req: Request, res: Response) => {
   sendJsonResponse(res, 200, message, user, access_token);
 });
 
-export { signin, verifyEmail, signup };
+const forgotPassword = asyncHandler(async (req: Request, res: Response) => {
+  const { message } = await authService.forgotPassword(req.body.email);
+  sendJsonResponse(res, 200, message);
+});
+
+const resetPassword = asyncHandler(async (req: Request, res: Response) => {
+  const { message, user } = await authService.resetPassword(
+    req.query.token as string,
+    req.body.newPassword,
+    req.body.confirmPassword,
+  );
+  sendJsonResponse(res, 200, message, user);
+});
+
+export { signin, verifyEmail, signup, forgotPassword, resetPassword };

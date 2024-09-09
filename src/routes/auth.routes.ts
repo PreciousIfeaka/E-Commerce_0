@@ -1,7 +1,15 @@
 import { Router } from "express";
-import { signin, signup, verifyEmail } from "../controllers";
+import {
+  forgotPassword,
+  resetPassword,
+  signin,
+  signup,
+  verifyEmail,
+} from "../controllers";
 import { validateData } from "../middleware/inputValidation";
 import {
+  forgotPasswordSchema,
+  resetPasswordSchema,
   signinSchema,
   signupSchema,
   verifyEmailSchema,
@@ -15,6 +23,17 @@ authRouter.post(
   "/auth/verify-email",
   validateData(verifyEmailSchema),
   verifyEmail,
+);
+authRouter.post(
+  "/auth/password/new",
+  validateData(forgotPasswordSchema),
+  forgotPassword,
+);
+
+authRouter.patch(
+  "/auth/password/edit",
+  validateData(resetPasswordSchema),
+  resetPassword,
 );
 
 export { authRouter };
