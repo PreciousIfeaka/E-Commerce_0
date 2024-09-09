@@ -6,7 +6,7 @@ const sendJsonResponse = (
   message: string,
   data?: any,
   accessToken?: string,
-) => {
+): any => {
   const responsePayload: any = {
     status: "success",
     message,

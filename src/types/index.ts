@@ -1,11 +1,4 @@
-import { Request, Response, NextFunction } from "express";
 import { User } from "../models";
-
-export type AsyncHandler = (
-  req: Request,
-  res: Response,
-  next: NextFunction,
-) => Promise<any>;
 
 export interface ISignupPayload {
   name: string;
@@ -24,6 +17,13 @@ export interface IAuthService {
     message: string;
     user: Partial<User>;
     access_token: string;
+  }>;
+
+  verifyEmail(
+    token: string,
+    otp: number,
+  ): Promise<{
+    message: string;
   }>;
 
   signin(payload: ISigninPayload): Promise<{

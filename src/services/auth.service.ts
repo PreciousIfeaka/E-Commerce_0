@@ -37,9 +37,9 @@ export class AuthService implements IAuthService {
 
       const hashedPassword = await bcrypt.hash(password, 10);
       user.password = hashedPassword;
-
+      user.otp = generateOTP(6);
+      user.otp_expiredAt = new Date(Date.now() + 10000 * 60);
       const createdUser = await AppDataSource.manager.save(user);
-      const otp = generateOTP(6);
       const access_token = generateAccessToken(createdUser);
 
       const mailData = {
@@ -48,16 +48,17 @@ export class AuthService implements IAuthService {
         subject: "Email Verification",
         html: `<h2>${user.first_name}! Welcome to E-Commerce.</h2>
               <h4>Verify your email to continue...</h4>
-              <h4>Your one-time password is ${otp}.</h4>
-              <a href="http://${config.BASE_URL}/auth/verify-email?token=${access_token}"> Verify your email </a>
+              <h4>Your one-time password is ${user.otp}.</h4>
+              <a href="${config.BASE_URL}/auth/verify-email?token=${access_token}"> Verify your email </a>
             `,
       };
 
       await sendEmail(mailData);
 
+      const { password: _, otp: __, ...rest } = createdUser;
       return {
         message: "user created successfully",
-        user: createdUser,
+        user: rest,
         access_token,
       };
     } catch (error) {
@@ -68,6 +69,47 @@ export class AuthService implements IAuthService {
     }
   }
 
+  public async verifyEmail(token: string, otp: number) {
+    try {
+      const decoded: any = jwt.verify(token, config.AUTH_SECRET as Secret);
+
+      if (!decoded) {
+        throw new Unauthorized("Invalid token");
+      }
+
+      const user = await this.userRepository.findOneBy({ id: decoded.user_id });
+
+      if (!user) {
+        return {
+          message: "Not a registered user",
+        };
+      }
+
+      if (user.otp !== otp) {
+        return {
+          message: "Invalid OTP",
+        };
+      } else if (user.otp_expiredAt < new Date()) {
+        return {
+          message: "OTP has expired",
+        };
+      }
+
+      user.is_verified = true;
+
+      return {
+        message: "Successful email verification",
+      };
+    } catch (error) {
+      if ((error as Error).name === "TokenExpiredError") {
+        throw new HttpError(400, "Verification token has expired");
+      }
+      if (error instanceof HttpError) {
+        throw error;
+      }
+      throw new ServerError((error as Error).message);
+    }
+  }
   public async signin(payload: ISigninPayload) {
     const { email, password } = payload;
 

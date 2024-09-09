@@ -3,6 +3,8 @@ import { User } from "../models";
 import jwt, { Secret } from "jsonwebtoken";
 import nodemailer, { SendMailOptions } from "nodemailer";
 import { ServerError } from "../middleware";
+import log from "./logger";
+import { resolve } from "path";
 
 export const generateOTP = (digit: number): number => {
   const power = Math.pow(10, digit - 1);
@@ -32,7 +34,7 @@ export const sendEmail = async (mailData: SendMailOptions) => {
   });
   try {
     await transporter.sendMail(mailData);
-    return "Email sent successfully";
+    log.info("Email sent successfully");
   } catch (error) {
     throw new ServerError((error as Error).message);
   }

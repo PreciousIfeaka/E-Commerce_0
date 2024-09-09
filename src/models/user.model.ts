@@ -31,4 +31,10 @@ export class User extends ExtendedBaseEntity {
     default: [userRole.CUSTOMER],
   })
   user_role: userRole[];
+
+  @Column({ nullable: false })
+  otp: number;
+
+  @Column({ nullable: false })
+  otp_expiredAt: Date;
 }
