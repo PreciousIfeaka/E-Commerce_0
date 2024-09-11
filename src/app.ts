@@ -1,6 +1,6 @@
 import cors from "cors";
 import express, { Express, Request, Response } from "express";
-import { authRouter } from "./routes";
+import { authRouter, productRouter } from "./routes";
 
 const app: Express = express();
 app.options("*", cors());
@@ -32,4 +32,6 @@ app.get("/api/v1", (_req: Request, res: Response) => {
 });
 
 app.use("/api/v1", authRouter);
+app.use("/api/v1", productRouter);
+
 export default app;

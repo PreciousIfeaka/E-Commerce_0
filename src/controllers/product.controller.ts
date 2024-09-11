@@ -16,21 +16,21 @@ const createProduct = asyncHandler(async (req: Request, res: Response) => {
 const updateProduct = asyncHandler(async (req: Request, res: Response) => {
   const { message, product } = await productService.updateProduct(
     req.body,
-    req.query.productId as string,
+    req.params.id as string,
   );
   sendJsonResponse(res, 200, message, product);
 });
 
 const deleteProduct = asyncHandler(async (req: Request, res: Response) => {
   const { message, product } = await productService.deleteProduct(
-    req.query.productId as string,
+    req.params.id as string,
   );
   sendJsonResponse(res, 200, message, product);
 });
 
 const getProductById = asyncHandler(async (req: Request, res: Response) => {
   const { message, product } = await productService.getProductById(
-    req.query.productId as string,
+    req.params.id as string,
   );
   sendJsonResponse(res, 200, message, product);
 });

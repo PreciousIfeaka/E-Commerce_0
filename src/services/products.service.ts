@@ -1,7 +1,7 @@
 import { Repository } from "typeorm";
 import { Brand, Product, Subcategory } from "../models";
 import AppDataSource from "../data-source";
-import { ICreateProduct, IProductService } from "../types";
+import { ICreateProduct, IProductService, IUpdateProduct } from "../types";
 import { ResourceNotFound, ServerError } from "../middleware";
 
 export class ProductService implements IProductService {
@@ -60,7 +60,7 @@ export class ProductService implements IProductService {
   }
 
   public async updateProduct(
-    payload: Partial<Product>,
+    payload: IUpdateProduct,
     productId: string,
   ): Promise<{
     message: string;
@@ -138,6 +138,7 @@ export class ProductService implements IProductService {
       name?: string;
       category?: string;
       subcategory?: string;
+      brand?: string;
       minPrice?: number;
       maxPrice?: number;
     },
@@ -157,14 +158,20 @@ export class ProductService implements IProductService {
     }
 
     if (query.category) {
-      querybuilder.andWhere("product.category = :category", {
-        category: query.category,
+      querybuilder.andWhere("product.categoryId = :categoryId", {
+        categoryId: query.category,
       });
     }
 
     if (query.subcategory) {
-      querybuilder.andWhere("product.subcategory = :subcategory", {
-        subcategory: query.subcategory,
+      querybuilder.andWhere("product.subcategoryId = :subcategoryId", {
+        subcategoryId: query.subcategory,
+      });
+    }
+
+    if (query.brand) {
+      querybuilder.andWhere("product.brandId = :brandId", {
+        brandId: query.brand,
       });
     }
 

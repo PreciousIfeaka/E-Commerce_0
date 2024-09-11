@@ -8,6 +8,19 @@ export interface ICreateProduct {
   coverimage_url: string;
   images_url?: string;
   stock_status: string;
+  product_size: string;
+}
+
+export interface IUpdateProduct {
+  name?: string;
+  description?: string;
+  price?: number;
+  quantity?: number;
+  coverimage_url?: string;
+  images_url?: string;
+  stock_status?: string;
+  brandId?: string;
+  subcategoryId?: string;
 }
 
 export interface IProductService {
@@ -20,7 +33,7 @@ export interface IProductService {
   }>;
 
   updateProduct(
-    payload: Partial<Product>,
+    payload: IUpdateProduct,
     productId: string,
   ): Promise<{
     message: string;
@@ -41,6 +54,8 @@ export interface IProductService {
     query: {
       name?: string;
       category?: string;
+      subcategory?: string;
+      brand?: string;
       minPrice?: number;
       maxPrice?: number;
     },
