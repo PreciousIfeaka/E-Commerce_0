@@ -1,5 +1,2 @@
-export enum userRole {
-  ADMIN = "admin",
-  VENDOR = "vendor",
-  CUSTOMER = "customer",
-};
+export * from "./userRole";
+export * from "./product";
