@@ -1,3 +1,4 @@
+import { string } from "zod";
 import { Category } from "../models";
 
 export interface ICreateCategory {
@@ -22,6 +23,11 @@ export interface IProductCategoryService {
     payload: IUpdateCategory,
     categoryId: string,
   ): Promise<{
+    message: string;
+    category: Partial<Category>;
+  }>;
+
+  getCategoryById(categoryId: string): Promise<{
     message: string;
     category: Partial<Category>;
   }>;
