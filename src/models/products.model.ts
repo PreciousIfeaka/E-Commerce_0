@@ -22,7 +22,7 @@ export class Product extends ExtendedBaseEntity {
   @Column()
   coverimage_url: string;
 
-  @Column({ nullable: true })
+  @Column("simple-array", { nullable: true })
   images_url: string[];
 
   @ManyToOne(() => Category, (category) => category.products)

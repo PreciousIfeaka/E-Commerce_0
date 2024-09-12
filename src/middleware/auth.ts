@@ -47,6 +47,30 @@ export const authMiddleware = async (
     });
   } catch (error) {
     log.error(error);
-    throw new ServerError("INTERNAL_SERVER_ERROR");
+    throw new ServerError("Internal server error");
   }
 };
+
+export const checkRole =
+  (roles: userRole[]) =>
+  (
+    req: Request & {
+      user?: { user_id: string; email: string; role: userRole };
+    },
+    res: Response,
+    next: NextFunction,
+  ) => {
+    try {
+      if (!req.user || roles.includes(req.user.role)) {
+        return sendJsonResponse(
+          res,
+          403,
+          `user role is not part of ${roles}, access denied.`,
+        );
+      }
+      next();
+    } catch (error) {
+      log.error(error);
+      throw new ServerError("Internal server error");
+    }
+  };

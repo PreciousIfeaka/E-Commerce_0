@@ -7,8 +7,9 @@ const sendJsonResponse = (
   data?: any,
   accessToken?: string,
 ): any => {
+  const status = statusCode >= 200 && statusCode < 300 ? "success" : "failed";
   const responsePayload: any = {
-    status: "success",
+    status,
     message,
     status_code: statusCode,
     data,

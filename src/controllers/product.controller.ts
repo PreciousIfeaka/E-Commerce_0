@@ -46,12 +46,12 @@ const getAllProducts = asyncHandler(async (req: Request, res: Response) => {
     minPrice: Number(minPrice),
     maxPrice: Number(maxPrice),
   };
-  const { message, products } = await productService.getAllProducts(
+  const { message, products, total } = await productService.getAllProducts(
     searchCriteria,
     Number(page),
     Number(limit),
   );
-  sendJsonResponse(res, 200, message, products);
+  sendJsonResponse(res, 200, message, { products, total });
 });
 
 export {

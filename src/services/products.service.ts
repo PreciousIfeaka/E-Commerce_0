@@ -187,9 +187,12 @@ export class ProductService implements IProductService {
       });
     }
 
+    const currentPage = Number(page) || 1;
+    const currentLimit = Number(limit) || 10;
+
     const [products, total] = await querybuilder
-      .skip((page - 1) * limit)
-      .take(limit)
+      .skip((currentPage - 1) * currentLimit)
+      .take(currentLimit)
       .getManyAndCount();
 
     return {

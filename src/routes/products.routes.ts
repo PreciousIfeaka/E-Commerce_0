@@ -14,7 +14,8 @@ import {
   getProductByIdSchema,
   updateProductSchema,
 } from "../validationSchema/products";
-import { authMiddleware } from "../middleware";
+import { authMiddleware, checkRole } from "../middleware";
+import { userRole } from "../enums";
 
 const productRouter = Router();
 
@@ -22,30 +23,32 @@ productRouter.post(
   "/products",
   validateData(createProductSchema),
   authMiddleware,
+  checkRole([userRole.ADMIN]),
   createProduct,
 );
+
 productRouter.put(
   "/products/:id",
   validateData(updateProductSchema, ["body", "params"]),
   authMiddleware,
+  checkRole([userRole.ADMIN]),
   updateProduct,
 );
 productRouter.delete(
   "/products/:id",
   validateData(deleteProductSchema, ["params"]),
   authMiddleware,
+  checkRole([userRole.ADMIN]),
   deleteProduct,
 );
 productRouter.get(
   "/products/:id",
   validateData(getProductByIdSchema, ["params"]),
-  authMiddleware,
   getProductById,
 );
 productRouter.get(
   "/products",
   validateData(getAllProductsSchema, ["params", "query"]),
-  authMiddleware,
   getAllProducts,
 );
 
