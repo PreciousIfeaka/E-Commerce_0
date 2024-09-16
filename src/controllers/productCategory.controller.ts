@@ -1,6 +1,6 @@
 import { asyncHandler } from "../helpers/asyncHandler";
 import { sendJsonResponse } from "../helpers/responseHelper";
-import { ProductCategoryService } from "../services/productCategory.service";
+import { ProductCategoryService } from "../services";
 import { Request, Response } from "express";
 
 const categoryService = new ProductCategoryService();

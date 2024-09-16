@@ -1,7 +1,7 @@
 import { asyncHandler } from "../helpers/asyncHandler";
 import { sendJsonResponse } from "../helpers/responseHelper";
 import { ProductService } from "../services";
-import { Request, Response, NextFunction } from "express";
+import { Request, Response } from "express";
 
 const productService = new ProductService();
 

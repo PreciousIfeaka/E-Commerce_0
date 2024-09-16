@@ -9,8 +9,8 @@ import {
 const categoryRouter = Router();
 
 categoryRouter.get("/products/categories", getAllCategories);
-categoryRouter.get("/products/category/:id", getCategoryById);
-categoryRouter.post("/products/category", createProductCategory);
-categoryRouter.put("/products/category/:id", updateProductCategory);
+categoryRouter.get("/products/categories/:id", getCategoryById);
+categoryRouter.post("/products/categories", createProductCategory);
+categoryRouter.put("/products/categories/:id", updateProductCategory);
 
 export { categoryRouter };

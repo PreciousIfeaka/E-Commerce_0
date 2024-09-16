@@ -16,7 +16,6 @@ export const createProductSchema = z.object({
   product_size: z.enum(["large", "standard", "small"], {
     errorMap: () => ({ message: "Invalid product size" }),
   }),
-  subcategoryId: z.string().uuid({ message: "Invalid subcategory ID format" }),
   brandId: z.string().uuid({ message: "Invalid brand ID format" }).optional(),
 });
 

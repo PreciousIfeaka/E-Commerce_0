@@ -31,4 +31,16 @@ export interface IProductCategoryService {
     message: string;
     category: Partial<Category>;
   }>;
+
+  getAllCategories(
+    query: {
+      name?: string;
+    },
+    page: number,
+    limit: number,
+  ): Promise<{
+    message: string;
+    categories: Category[];
+    total: number;
+  }>;
 }

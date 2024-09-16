@@ -1,6 +1,11 @@
 import cors from "cors";
 import express, { Express, Request, Response } from "express";
-import { authRouter, categoryRouter, productRouter } from "./routes";
+import {
+  authRouter,
+  categoryRouter,
+  productRouter,
+  subcategoryRouter,
+} from "./routes";
 
 const app: Express = express();
 app.options("*", cors());
@@ -17,7 +22,7 @@ app.use(
   }),
 );
 
-app.use(express.json({}));
+app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.get("/", (_req: Request, res: Response) => {
   res.send({
@@ -32,7 +37,8 @@ app.get("/api/v1", (_req: Request, res: Response) => {
 });
 
 app.use("/api/v1", authRouter);
-app.use("/api/v1", productRouter);
+app.use("/api/v1", subcategoryRouter);
 app.use("/api/v1", categoryRouter);
+app.use("/api/v1", productRouter);
 
 export default app;
