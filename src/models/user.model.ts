@@ -25,6 +25,15 @@ export class User extends ExtendedBaseEntity {
   @Column({ default: false })
   is_verified: boolean;
 
+  @Column({ default: false })
+  is_2fa_enabled: boolean;
+
+  @Column({ nullable: true })
+  secret_2fa: string;
+
+  @Column({ nullable: true })
+  auth_url_2fa: string;
+
   @Column({
     type: "enum",
     enum: userRole,

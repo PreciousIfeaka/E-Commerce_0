@@ -1,5 +1,6 @@
 import { Repository } from "typeorm";
 import {
+  BadRequest,
   Conflict,
   HttpError,
   InvalidInput,
@@ -11,9 +12,11 @@ import { IAuthService, ISigninPayload, ISignupPayload } from "../types";
 import { User } from "../models";
 import AppDataSource from "../data-source";
 import bcrypt from "bcrypt";
+import speakeasy from "speakeasy";
 import jwt, { Secret } from "jsonwebtoken";
 import { config } from "../config";
 import { generateAccessToken, generateOTP, sendEmail } from "../utils";
+import { log } from "console";
 
 export class AuthService implements IAuthService {
   private userRepository: Repository<User>;
@@ -230,5 +233,115 @@ export class AuthService implements IAuthService {
       message: "Successful password reset",
       user: rest,
     };
+  }
+
+  public async enable2FA(
+    user_id: string,
+    password: string,
+  ): Promise<{
+    message: string;
+    secret: string;
+    auth_url: string;
+  }> {
+    try {
+      const user = await this.userRepository.findOneBy({ id: user_id });
+
+      if (!user) throw new ResourceNotFound("User does not exist");
+
+      if (!user.is_verified) throw new Unauthorized("User email not verified");
+
+      const verified_password = await bcrypt.compare(password, user.password);
+      if (!verified_password) throw new Unauthorized("Invalid password");
+
+      if (user.is_2fa_enabled) throw new BadRequest("User is 2fa enabled");
+
+      const secret = speakeasy.generateSecret({ length: 32 });
+      if (!secret)
+        throw new BadRequest("Could not generate 2FA secret, try again.");
+
+      const payload = {
+        is_2fa_enabled: true,
+        auth_url_2fa: secret.otpauth_url as string,
+        secret_2fa: secret.base32,
+      };
+
+      await this.userRepository.update(user_id, payload);
+
+      return {
+        message: "2FA successfully enabled",
+        secret: secret.base32,
+        auth_url: secret.otpauth_url as string,
+      };
+    } catch (error) {
+      if (error instanceof HttpError) throw error;
+      throw new ServerError((error as Error).message);
+    }
+  }
+
+  public async verify2FA(
+    user_id: string,
+    token: string,
+  ): Promise<{
+    message: string;
+  }> {
+    try {
+      const user = await this.userRepository.findOneBy({ id: user_id });
+
+      if (!user) throw new ResourceNotFound("User does not exist");
+      if (!user.is_2fa_enabled) throw new BadRequest("User is not 2FA enabled");
+
+      const verifiedToken = speakeasy.totp.verify({
+        secret: user.secret_2fa,
+        encoding: "base32",
+        token,
+      });
+
+      if (!verifiedToken) throw new BadRequest("Invalid 2FA token");
+
+      return {
+        message: "Token is verified",
+      };
+    } catch (error) {
+      if (error instanceof HttpError) throw error;
+      throw new ServerError("Could not verify 2FA Token");
+    }
+  }
+
+  public async disable2FA(
+    user_id: string,
+    token: string,
+  ): Promise<{
+    message: string;
+  }> {
+    try {
+      const user = await this.userRepository.findOneBy({ id: user_id });
+
+      if (!user) throw new ResourceNotFound("User does not exist");
+      if (!user.is_2fa_enabled)
+        throw new BadRequest("User is already 2FA disabled");
+
+      const verified_token = await speakeasy.totp.verify({
+        secret: user.secret_2fa,
+        encoding: "base32",
+        token,
+      });
+
+      if (!verified_token) throw new Unauthorized("Invalid 2FA token");
+
+      const updatePayload: any = {
+        is_2fa_enabled: false,
+        auth_url_2fa: null,
+        secret_2fa: null,
+      };
+
+      await this.userRepository.update(user_id, updatePayload);
+
+      return {
+        message: "Successfully disabled 2fa",
+      };
+    } catch (error) {
+      if (error instanceof HttpError) throw error;
+      throw new ServerError("Could not disable 2FA, try again.");
+    }
   }
 }

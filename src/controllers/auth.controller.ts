@@ -2,6 +2,7 @@ import { asyncHandler } from "../helpers/asyncHandler";
 import { Request, Response } from "express";
 import { AuthService } from "../services";
 import { sendJsonResponse } from "../helpers/responseHelper";
+import log from "../utils/logger";
 
 const authService = new AuthService();
 
@@ -37,4 +38,34 @@ const resetPassword = asyncHandler(async (req: Request, res: Response) => {
   sendJsonResponse(res, 200, message, user);
 });
 
-export { signin, verifyEmail, signup, forgotPassword, resetPassword };
+const enable2FA = asyncHandler(async (req: Request, res: Response) => {
+  const user_id = req.user!.user_id;
+  const { message, secret, auth_url } = await authService.enable2FA(
+    user_id,
+    req.body.password,
+  );
+  sendJsonResponse(res, 200, message, { secret, auth_url });
+});
+
+const verify2FA = asyncHandler(async (req: Request, res: Response) => {
+  const user_id = req.user!.user_id;
+  const { message } = await authService.verify2FA(user_id, req.body.token);
+  sendJsonResponse(res, 200, message);
+});
+
+const disable2FA = asyncHandler(async (req: Request, res: Response) => {
+  const user_id = req.user!.user_id;
+  const { message } = await authService.disable2FA(user_id, req.body.token);
+  sendJsonResponse(res, 200, message);
+});
+
+export {
+  signin,
+  verifyEmail,
+  signup,
+  forgotPassword,
+  resetPassword,
+  enable2FA,
+  verify2FA,
+  disable2FA,
+};

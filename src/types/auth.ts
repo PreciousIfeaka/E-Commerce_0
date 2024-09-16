@@ -44,4 +44,27 @@ export interface IAuthService {
     message: string;
     user: Partial<User>;
   }>;
+
+  enable2FA(
+    user_id: string,
+    password: string,
+  ): Promise<{
+    message: string;
+    secret: string;
+    auth_url: string;
+  }>;
+
+  verify2FA(
+    user_id: string,
+    token: string,
+  ): Promise<{
+    message: string;
+  }>;
+
+  disable2FA(
+    user_id: string,
+    token: string,
+  ): Promise<{
+    message: string;
+  }>;
 }

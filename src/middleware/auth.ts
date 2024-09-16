@@ -9,7 +9,7 @@ import log from "../utils/logger";
 import { ServerError } from "./error";
 
 export const authMiddleware = async (
-  req: Request & { user?: { user_id: string; email: string; role: userRole } },
+  req: Request,
   res: Response,
   next: NextFunction,
 ) => {
@@ -21,12 +21,11 @@ export const authMiddleware = async (
     }
 
     const token = authHeader.split(" ")[1];
-
     if (!token) {
       return sendJsonResponse(res, 401, "Invalid Token");
     }
 
-    jwt.verify(token, config.AUTH_SECRET as Secret, async (decoded, error) => {
+    jwt.verify(token, config.AUTH_SECRET as Secret, async (error, decoded) => {
       if (error || !decoded) {
         return sendJsonResponse(res, 401, "Invalid Token");
       }
