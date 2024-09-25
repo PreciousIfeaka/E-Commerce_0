@@ -2,7 +2,6 @@ import { asyncHandler } from "../helpers/asyncHandler";
 import { Request, Response } from "express";
 import { AuthService } from "../services";
 import { sendJsonResponse } from "../helpers/responseHelper";
-import log from "../utils/logger";
 
 const authService = new AuthService();
 
@@ -16,6 +15,18 @@ const verifyEmail = asyncHandler(async (req: Request, res: Response) => {
     req.query.token as string,
     req.body.otp,
   );
+  sendJsonResponse(res, 200, message);
+});
+
+const requestOTP = asyncHandler(async (req: Request, res: Response) => {
+  const { message, token } = await authService.requestOTP(
+    req.query.token as string,
+  );
+  sendJsonResponse(res, 200, message, undefined, token);
+});
+
+const verifyOTP = asyncHandler(async (req: Request, res: Response) => {
+  const { message } = await authService.verifyOTP(req.body.otp);
   sendJsonResponse(res, 200, message);
 });
 
@@ -62,6 +73,8 @@ const disable2FA = asyncHandler(async (req: Request, res: Response) => {
 export {
   signin,
   verifyEmail,
+  requestOTP,
+  verifyOTP,
   signup,
   forgotPassword,
   resetPassword,

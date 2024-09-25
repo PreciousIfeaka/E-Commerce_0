@@ -6,6 +6,7 @@ import {
   productRouter,
   subcategoryRouter,
 } from "./routes";
+import { errorHandler, routeNotFound } from "./middleware";
 
 const app: Express = express();
 app.options("*", cors());
@@ -40,5 +41,8 @@ app.use("/api/v1", authRouter);
 app.use("/api/v1", subcategoryRouter);
 app.use("/api/v1", categoryRouter);
 app.use("/api/v1", productRouter);
+
+app.use(errorHandler);
+app.use(routeNotFound);
 
 export default app;

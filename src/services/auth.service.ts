@@ -13,10 +13,10 @@ import { User } from "../models";
 import AppDataSource from "../data-source";
 import bcrypt from "bcrypt";
 import speakeasy from "speakeasy";
-import jwt, { Secret } from "jsonwebtoken";
+import jwt, { JwtPayload, Secret } from "jsonwebtoken";
 import { config } from "../config";
 import { generateAccessToken, generateOTP, sendEmail } from "../utils";
-import { log } from "console";
+import { sendUser } from "../helpers/responseHelper";
 
 export class AuthService implements IAuthService {
   private userRepository: Repository<User>;
@@ -47,22 +47,22 @@ export class AuthService implements IAuthService {
       const access_token = generateAccessToken(createdUser);
 
       const mailData = {
-        form: '"Precious Enuagwune" <preciousifeaka@gmail.com>',
+        from: `E-Commerce <${config.SMTP_USER}>`,
         to: email,
         subject: "Email Verification",
-        html: `<h4>${user.first_name}! Welcome to E-Commerce.</h4>
-              <p>Verify your email to continue...</p>
-              <p>Your one-time password is ${user.otp}.</p>
-              <a href="${config.BASE_URL}/auth/verify-email?token=${access_token}"> Verify your email </a>
-            `,
+        html: `<p> Hello ${user.first_name},</p> 
+              <p>Thank you for signing up on E-Commerce. In order to proceed, you have to verify your email.</p>
+              <p>Your one-time password is: </p>
+              <p>${user.otp}</p>
+              <p>This OTP is valid for the next 10 minutes. Please do not share this code with anyone.</p>
+              <p>If you did not request this, please ignore this email.</p>`,
       };
 
       await sendEmail(mailData);
 
-      const { password: _, otp: __, ...rest } = createdUser;
       return {
         message: "user created successfully",
-        user: rest,
+        user: sendUser(user),
         access_token,
       };
     } catch (error) {
@@ -77,42 +77,100 @@ export class AuthService implements IAuthService {
     try {
       const decoded: any = jwt.verify(token, config.AUTH_SECRET as Secret);
 
-      if (!decoded) {
-        throw new Unauthorized("Invalid token");
-      }
+      if (!decoded) throw new Unauthorized("Invalid token");
 
       const user_id = decoded.user_id;
 
       const user = await this.userRepository.findOneBy({ id: user_id });
 
-      if (!user) {
-        return {
-          message: "Not a registered user",
-        };
-      }
+      if (!user) throw new ResourceNotFound("User not found");
 
       if (user.otp !== otp) {
-        return {
-          message: "Invalid OTP",
-        };
+        throw new BadRequest("Invalid OTP");
       } else if (user.otp_expiredAt < new Date()) {
-        await this.userRepository.delete(user.id);
-        return {
-          message: "OTP has expired",
-        };
+        throw new BadRequest("OTP has expired");
       }
 
-      await this.userRepository.update(user_id, { is_verified: true });
+      const updatePayload: Partial<User> = {
+        is_verified: true,
+        otp: 0,
+      };
+
+      await this.userRepository.update(user_id, updatePayload);
       return {
         message: "Successful email verification",
       };
     } catch (error) {
-      if ((error as Error).name === "TokenExpiredError") {
-        throw new HttpError(400, "Verification token has expired");
-      }
-      if (error instanceof HttpError) {
-        throw error;
-      }
+      if (error instanceof HttpError) throw error;
+      throw new ServerError((error as Error).message);
+    }
+  }
+
+  public async requestOTP(token: string): Promise<{
+    message: string;
+    token: string;
+  }> {
+    try {
+      const { user_id } = jwt.verify(
+        token,
+        config.AUTH_SECRET as Secret,
+      ) as JwtPayload;
+      if (!user_id) throw new Unauthorized("Invalid access token");
+
+      const user = await this.userRepository.findOneBy({ id: user_id });
+      if (!user) throw new ResourceNotFound("User not found");
+
+      const otp = generateOTP(6);
+
+      const mailData = {
+        from: `E-Commerce <${config.SMTP_USER}>`,
+        to: user.email,
+        subject: "OTP Verification",
+        html: `<p> Hello ${user.first_name},</p> 
+              <p>Your one-time password is:</p>
+              <p>${otp}</p>
+              <p>This OTP is valid for the next 10 minutes. Please do not share this code with anyone.</p>
+              <p>If you did not request this, please ignore this email.</p>`,
+      };
+
+      await sendEmail(mailData);
+
+      const updatePayload = {
+        otp,
+        otp_expiredAt: new Date(Date.now() + 10000 * 60),
+      };
+
+      await this.userRepository.update(user_id, updatePayload);
+
+      return {
+        message: "OTP successfully sent to user email",
+        token,
+      };
+    } catch (error) {
+      if (error instanceof HttpError) throw error;
+      throw new ServerError((error as Error).message);
+    }
+  }
+
+  public async verifyOTP(otp: number): Promise<{
+    message: string;
+  }> {
+    try {
+      const user = await this.userRepository.findOneBy({ otp });
+      if (!user || user.otp_expiredAt < new Date())
+        throw new BadRequest("Invalid OTP");
+
+      const updatePayload = {
+        otp: 0,
+      };
+
+      await this.userRepository.update(user.id, updatePayload);
+
+      return {
+        message: "Successfully verified OTP",
+      };
+    } catch (error) {
+      if (error instanceof HttpError) throw error;
       throw new ServerError((error as Error).message);
     }
   }
@@ -142,11 +200,9 @@ export class AuthService implements IAuthService {
         { expiresIn: config.AUTH_TOKEN_EXPIRY },
       );
 
-      const { password: _, otp: __, ...rest } = userExists;
-
       return {
         message: "User signed in succefully",
-        user: rest,
+        user: sendUser(userExists),
         access_token,
       };
     } catch (error) {
@@ -157,7 +213,10 @@ export class AuthService implements IAuthService {
     }
   }
 
-  public async forgotPassword(email: string) {
+  public async forgotPassword(email: string): Promise<{
+    message: string;
+    token: string;
+  }> {
     try {
       const user = await this.userRepository.findOneBy({ email });
 
@@ -165,18 +224,18 @@ export class AuthService implements IAuthService {
         throw new ResourceNotFound("User not found");
       }
 
-      const reset_token = generateAccessToken(user);
+      const token = generateAccessToken(user);
+      const otp = generateOTP(6);
 
       const mailData = {
         form: "no-reply@gmail.com <preciousifeaka@gmail.com>",
         to: email,
-        subject: "Reset Password Instructions",
-        html: `<h4>Hello ${user.first_name}!</h4>
-              <p>Someone has requested a link to change your password. You can do this through the link below.</p>
-              <a href="${config.BASE_URL}/auth/password/edit?token=${reset_token}"> Change my password </a>
-              <p>or copy and open this link in your browser: <a href="${config.BASE_URL}/auth/password/edit?token=${reset_token}">${config.BASE_URL}/auth/password/edit?token=${reset_token}</a></p>
-              <p>If you didn't request this, please ignore this email.</p>
-              <p>Your password won't change until you access the link above and create a new one</p>
+        subject: "OTP Verification",
+        html: `<p> Hello ${user.first_name},</p> 
+              <p>Your one-time password is:</p>
+              <p>${otp}</p>
+              <p>This OTP is valid for the next 10 minutes. Please do not share this code with anyone.</p>
+              <p>If you did not request this, please ignore this email.</p>
             `,
       };
 
@@ -184,6 +243,7 @@ export class AuthService implements IAuthService {
 
       return {
         message: "Email successfully sent",
+        token,
       };
     } catch (error) {
       if (error instanceof HttpError) {
@@ -227,11 +287,9 @@ export class AuthService implements IAuthService {
 
     await this.userRepository.update(user.id, { password: hashedPassword });
 
-    const { password: _, otp: __, ...rest } = user;
-
     return {
       message: "Successful password reset",
-      user: rest,
+      user: sendUser(user),
     };
   }
 
