@@ -4,7 +4,6 @@ export interface ISignupPayload {
   name: string;
   email: string;
   password: string;
-  phone: string;
 }
 
 export interface ISigninPayload {

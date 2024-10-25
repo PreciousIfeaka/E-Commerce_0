@@ -4,9 +4,12 @@ import {
   authRouter,
   categoryRouter,
   productRouter,
+  profileRouter,
   subcategoryRouter,
 } from "./routes";
+import swaggerUi from "swagger-ui-express";
 import { errorHandler, routeNotFound } from "./middleware";
+import swaggerSpecs from "./config/swaggerConfig";
 
 const app: Express = express();
 app.options("*", cors());
@@ -38,10 +41,15 @@ app.get("/api/v1", (_req: Request, res: Response) => {
 });
 
 app.use("/api/v1", authRouter);
+app.use("/api/v1", profileRouter);
 app.use("/api/v1", subcategoryRouter);
 app.use("/api/v1", categoryRouter);
 app.use("/api/v1", productRouter);
-
+app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpecs));
+app.use("/openapi.json", (req: Request, res: Response) => {
+  res.setHeader("Content-Type", "application/json");
+  res.send(swaggerSpecs);
+});
 app.use(errorHandler);
 app.use(routeNotFound);
 

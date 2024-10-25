@@ -9,7 +9,7 @@ import {
   Unauthorized,
 } from "../middleware";
 import { IAuthService, ISigninPayload, ISignupPayload } from "../types";
-import { User } from "../models";
+import { Profile, User } from "../models";
 import AppDataSource from "../data-source";
 import bcrypt from "bcrypt";
 import speakeasy from "speakeasy";
@@ -25,7 +25,7 @@ export class AuthService implements IAuthService {
     this.userRepository = AppDataSource.getRepository(User);
   }
   public async signup(payload: ISignupPayload) {
-    const { name, email, password, phone } = payload;
+    const { name, email, password } = payload;
     try {
       const userExists = await this.userRepository.findOneBy({ email });
 
@@ -37,14 +37,14 @@ export class AuthService implements IAuthService {
       user.first_name = name.split(" ")[0];
       user.last_name = name.split(" ")[1];
       user.email = email;
-      user.phone = phone;
+
+      user.profile = new Profile();
+      user.profile.name = name;
 
       const hashedPassword = await bcrypt.hash(password, 10);
       user.password = hashedPassword;
       user.otp = generateOTP(6);
       user.otp_expiredAt = new Date(Date.now() + 10000 * 60);
-      const createdUser = await AppDataSource.manager.save(user);
-      const access_token = generateAccessToken(createdUser);
 
       const mailData = {
         from: `E-Commerce <${config.SMTP_USER}>`,
@@ -52,13 +52,15 @@ export class AuthService implements IAuthService {
         subject: "Email Verification",
         html: `<p> Hello ${user.first_name},</p> 
               <p>Thank you for signing up on E-Commerce. In order to proceed, you have to verify your email.</p>
-              <p>Your one-time password is: </p>
-              <p>${user.otp}</p>
+              <p>Your one-time password is: ${user.otp}</p>
               <p>This OTP is valid for the next 10 minutes. Please do not share this code with anyone.</p>
               <p>If you did not request this, please ignore this email.</p>`,
       };
 
       await sendEmail(mailData);
+
+      const createdUser = await this.userRepository.save(user);
+      const access_token = generateAccessToken(createdUser);
 
       return {
         message: "user created successfully",
@@ -190,9 +192,6 @@ export class AuthService implements IAuthService {
       if (!passwordMatch) {
         throw new Conflict("Incorrect password");
       }
-      if (!userExists.is_verified) {
-        throw new Unauthorized("User email is not verified");
-      }
 
       const access_token = jwt.sign(
         { user_id: userExists.id },
@@ -200,8 +199,15 @@ export class AuthService implements IAuthService {
         { expiresIn: config.AUTH_TOKEN_EXPIRY },
       );
 
+      let message;
+      if (!userExists.is_verified) {
+        message = "User is not verified, proceed to request an otp";
+      } else {
+        message = "User signed in successfully";
+      }
+
       return {
-        message: "User signed in succefully",
+        message,
         user: sendUser(userExists),
         access_token,
       };

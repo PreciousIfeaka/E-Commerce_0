@@ -1,6 +1,7 @@
-import { Column, Entity } from "typeorm";
+import { Column, Entity, JoinColumn, JoinTable, OneToOne } from "typeorm";
 import ExtendedBaseEntity from "../base-entity";
 import { userRole } from "../enums";
+import { Profile } from "./profile.model";
 
 @Entity({ name: "users" })
 export class User extends ExtendedBaseEntity {
@@ -15,12 +16,6 @@ export class User extends ExtendedBaseEntity {
 
   @Column({ nullable: true })
   password: string;
-
-  @Column({ nullable: true })
-  phone: string;
-
-  @Column({ nullable: true })
-  avatar_url: string;
 
   @Column({ default: false })
   is_verified: boolean;
@@ -46,4 +41,7 @@ export class User extends ExtendedBaseEntity {
 
   @Column({ type: "timestamp", nullable: false })
   otp_expiredAt: Date;
+
+  @OneToOne(() => Profile, (profile) => profile.user, { cascade: true })
+  profile: Profile;
 }

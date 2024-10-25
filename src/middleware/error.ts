@@ -1,6 +1,5 @@
 import { Request, Response, NextFunction } from "express";
 
-
 class HttpError extends Error {
   status_code: number;
   success: boolean = false;
@@ -9,32 +8,32 @@ class HttpError extends Error {
     super(message);
     this.name = this.constructor.name;
     this.status_code = statusCode;
-  };
-};
+  }
+}
 
 class BadRequest extends HttpError {
   constructor(message: string) {
     super(400, message);
-  };
-};
+  }
+}
 
 class ResourceNotFound extends HttpError {
   constructor(message: string) {
     super(404, message);
-  };
-};
+  }
+}
 
 class Unauthorized extends HttpError {
   constructor(message: string) {
     super(401, message);
-  };
-};
+  }
+}
 
 class Forbidden extends HttpError {
   constructor(message: string) {
     super(403, message);
-  };
-};
+  }
+}
 
 class Conflict extends HttpError {
   constructor(message: string) {
@@ -66,10 +65,10 @@ const errorHandler = (
   _next: NextFunction,
 ) => {
   const { success, status_code, message } = err;
-  const cleanedMessage = message.replace(/"/g, "");
+  const cleanedMessage = message.replace(/"/g, "") || err;
   res.status(status_code).json({
     success: success || false,
-    status_code,
+    status_code: status_code || 500,
     message: cleanedMessage,
   });
 };
