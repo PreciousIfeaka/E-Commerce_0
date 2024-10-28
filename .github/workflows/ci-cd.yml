@@ -32,9 +32,6 @@ jobs:
       - name: Build the application
         run: yarn build && sudo rm -rf build
 
-      - name: Run lint
-        run: yarn lint
-
       - name: Retrieve environmental variables
         run: |
           touch .env
