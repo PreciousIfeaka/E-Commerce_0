@@ -34,6 +34,11 @@ jobs:
       - name: Build the application
         run: yarn build && sudo rm -rf build
 
+      - name: Retrieve environmental variables
+        run: |
+          touch .env
+          echo "${{ secrets.APP_ENV }}" > .env
+
       - name: Reset the db
         run: yarn reset-db
 
