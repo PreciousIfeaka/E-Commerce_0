@@ -47,14 +47,3 @@ jobs:
           sudo cp server-script/e-commerce-api.service /etc/systemd/system/e-commerce-api.service
           sudo systemctl daemon-reload
           sudo systemctl restart e-commerce-api.service
-
-      - name: Verify deployment
-        run: |
-          echo "Waiting for service to start..."
-          sleep 10
-          if sudo systemctl is-active --quiet homeworkai_be_staging.service; then
-            echo "Deployment successful!"
-          else
-            echo "Deployment failed!"
-            exit 1
-          fi
