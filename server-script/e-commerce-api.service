@@ -1,0 +1,11 @@
+[Unit]
+Description=Express Application
+After=network.target
+
+[Service]
+ExecStart=/bin/bash /home/ubuntu/actions-runner/_work/E-Commerce_0/E-Commerce_0/server-script/startapp.sh
+Restart=always
+WorkingDirectory=/home/ubuntu/actions-runner/_work/E-Commerce_0/E-Commerce_0
+
+[Install]
+WantedBy=multi-user.target
