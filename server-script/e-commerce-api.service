@@ -4,7 +4,7 @@ After=network.target
 
 [Service]
 ExecStart=/bin/bash /home/ubuntu/actions-runner/_work/E-Commerce_0/E-Commerce_0/server-script/startapp.sh
-Restart=always
+StartLimitInterval=0
 WorkingDirectory=/home/ubuntu/actions-runner/_work/E-Commerce_0/E-Commerce_0
 
 [Install]
