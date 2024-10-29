@@ -14,10 +14,6 @@ jobs:
         working-directory: /home/ubuntu/actions-runner/_work/E-Commerce_0/E-Commerce_0
 
     steps:
-      - name: Install yarn
-        run: sudo npm install -g yarn
-      - uses: actions/checkout@v4
-
       - name: Delete log file
         run: sudo rm /home/ubuntu/actions-runner/_work/E-Commerce_0/E-Commerce_0/logs/output.log
 
