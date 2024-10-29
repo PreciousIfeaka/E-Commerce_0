@@ -29,6 +29,18 @@ const swaggerDefinition = {
       name: "Users",
       description: "A list of routes for Users",
     },
+    {
+      name: "Products",
+      description: "A list of routes for Products",
+    },
+    {
+      name: "Product Categories",
+      description: "A list of routes for Product Categories",
+    },
+    {
+      name: "Product Subcategories",
+      description: "A list of routes for Product Subcategories",
+    },
   ],
   components: {
     securitySchemes: {

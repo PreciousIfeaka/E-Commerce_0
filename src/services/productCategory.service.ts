@@ -1,11 +1,7 @@
 import { Repository } from "typeorm";
 import { Category } from "../models";
 import AppDataSource from "../data-source";
-import {
-  ICreateCategory,
-  IProductCategoryService,
-  IUpdateCategory,
-} from "../types";
+import { ICreateCategory, IProductCategoryService } from "../types";
 import { HttpError, ResourceNotFound, ServerError } from "../middleware";
 
 export class ProductCategoryService implements IProductCategoryService {
@@ -41,7 +37,7 @@ export class ProductCategoryService implements IProductCategoryService {
   }
 
   public async updateProductCategory(
-    payload: IUpdateCategory,
+    payload: ICreateCategory,
     categoryId: string,
   ): Promise<{
     message: string;

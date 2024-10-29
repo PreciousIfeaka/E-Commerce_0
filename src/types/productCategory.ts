@@ -7,12 +7,6 @@ export interface ICreateCategory {
   image_url: string;
 }
 
-export interface IUpdateCategory {
-  name: string;
-  description: string;
-  image_url: string;
-}
-
 export interface IProductCategoryService {
   createProductCategory(payload: ICreateCategory): Promise<{
     message: string;
@@ -20,7 +14,7 @@ export interface IProductCategoryService {
   }>;
 
   updateProductCategory(
-    payload: IUpdateCategory,
+    payload: ICreateCategory,
     categoryId: string,
   ): Promise<{
     message: string;
