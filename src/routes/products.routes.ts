@@ -1,9 +1,11 @@
 import { Router } from "express";
 import {
+  addToCart,
   createProduct,
   deleteProduct,
   getAllProducts,
   getProductById,
+  removeFromCart,
   updateProduct,
 } from "../controllers";
 import { validateData } from "../middleware/inputValidation";
@@ -51,5 +53,7 @@ productRouter.get(
   validateData(getAllProductsSchema, ["params", "query"]),
   getAllProducts,
 );
+productRouter.put("/products/:id/cart", authMiddleware, addToCart);
+productRouter.delete("/products/:id/cart", authMiddleware, removeFromCart);
 
 export { productRouter };

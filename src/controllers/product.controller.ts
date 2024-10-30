@@ -16,21 +16,21 @@ const createProduct = asyncHandler(async (req: Request, res: Response) => {
 const updateProduct = asyncHandler(async (req: Request, res: Response) => {
   const { message, product } = await productService.updateProduct(
     req.body,
-    req.params.id as string,
+    req.params.id,
   );
   sendJsonResponse(res, 200, message, product);
 });
 
 const deleteProduct = asyncHandler(async (req: Request, res: Response) => {
   const { message, product } = await productService.deleteProduct(
-    req.params.id as string,
+    req.params.id,
   );
   sendJsonResponse(res, 200, message, product);
 });
 
 const getProductById = asyncHandler(async (req: Request, res: Response) => {
   const { message, product } = await productService.getProductById(
-    req.params.id as string,
+    req.params.id,
   );
   sendJsonResponse(res, 200, message, product);
 });
@@ -54,10 +54,40 @@ const getAllProducts = asyncHandler(async (req: Request, res: Response) => {
   sendJsonResponse(res, 200, message, { products, total });
 });
 
+const addToCart = asyncHandler(async (req: Request, res: Response) => {
+  const { message, items } = await productService.addProductToCart(
+    req.user!.user_id,
+    req.params.id,
+  );
+  sendJsonResponse(res, 200, message, items);
+});
+
+const increaseCartProductQuantity = asyncHandler(
+  async (req: Request, res: Response) => {
+    const { message, item } = await productService.increaseCartProductQuantity(
+      req.user!.user_id,
+      req.query.cartItemId as string,
+      req.query.increase_quantity === "true",
+    );
+    sendJsonResponse(res, 200, message, item);
+  },
+);
+
+const removeFromCart = asyncHandler(async (req: Request, res: Response) => {
+  const { message, cartItems } = await productService.removeProductFromCart(
+    req.user!.user_id,
+    req.params.id,
+  );
+  sendJsonResponse(res, 200, message, cartItems);
+});
+
 export {
   createProduct,
   updateProduct,
   getProductById,
   getAllProducts,
   deleteProduct,
+  addToCart,
+  increaseCartProductQuantity,
+  removeFromCart,
 };

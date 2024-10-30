@@ -1,4 +1,4 @@
-import { Brand, Product } from "../models";
+import { Brand, CartItem, Product } from "../models";
 
 export interface ICreateProduct {
   name: string;
@@ -65,5 +65,30 @@ export interface IProductService {
     message: string;
     products: Product[];
     total: number;
+  }>;
+
+  addProductToCart(
+    userId: string,
+    productId: string,
+  ): Promise<{
+    message: string;
+    items: CartItem[];
+  }>;
+
+  increaseCartProductQuantity(
+    userId: string,
+    cartItemId: string,
+    increaseQuantity: boolean,
+  ): Promise<{
+    message: string;
+    item: CartItem;
+  }>;
+
+  removeProductFromCart(
+    userId: string,
+    productId: string,
+  ): Promise<{
+    message: string;
+    cartItems: CartItem[];
   }>;
 }

@@ -1,9 +1,17 @@
-import { Column, Entity, JoinColumn, ManyToOne } from "typeorm";
+import {
+  Column,
+  Entity,
+  JoinColumn,
+  ManyToMany,
+  ManyToOne,
+  OneToMany,
+} from "typeorm";
 import ExtendedBaseEntity from "../base-entity";
 import { Subcategory } from "./subcategories.model";
 import { Brand } from "./brand.model";
 import { productSize, stockStatus } from "../enums";
 import { Category } from "./category.model";
+import { CartItem } from "./cart.model";
 
 @Entity()
 export class Product extends ExtendedBaseEntity {

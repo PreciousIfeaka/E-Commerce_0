@@ -1,18 +1,25 @@
 import { Repository } from "typeorm";
-import { Brand, Product, Subcategory } from "../models";
+import { Brand, Cart, CartItem, Product, Subcategory, User } from "../models";
 import AppDataSource from "../data-source";
 import { ICreateProduct, IProductService, IUpdateProduct } from "../types";
-import { ResourceNotFound, ServerError } from "../middleware";
+import { BadRequest, ResourceNotFound, ServerError } from "../middleware";
+import { stockStatus } from "../enums";
 
 export class ProductService implements IProductService {
+  private userRepository: Repository<User>;
   private productRepository: Repository<Product>;
   private subcategoryRepository: Repository<Subcategory>;
   private brandRepository: Repository<Brand>;
+  private cartRepository: Repository<Cart>;
+  private cartItemRepository: Repository<CartItem>;
 
   constructor() {
+    this.userRepository = AppDataSource.getRepository(User);
     this.productRepository = AppDataSource.getRepository(Product);
     this.subcategoryRepository = AppDataSource.getRepository(Subcategory);
     this.brandRepository = AppDataSource.getRepository(Brand);
+    this.cartRepository = AppDataSource.getRepository(Cart);
+    this.cartItemRepository = AppDataSource.getRepository(CartItem);
   }
 
   public async createProduct(
@@ -199,6 +206,119 @@ export class ProductService implements IProductService {
       message: "successfully retrieved products",
       products,
       total,
+    };
+  }
+
+  public async addProductToCart(
+    userId: string,
+    productId: string,
+  ): Promise<{
+    message: string;
+    items: CartItem[];
+  }> {
+    const product = await this.productRepository.findOne({
+      where: { id: productId },
+    });
+    if (!product)
+      throw new ResourceNotFound("Product of given ID does not exist");
+
+    const user = await this.userRepository.findOne({
+      where: { id: userId },
+      relations: ["cart"],
+    });
+    if (!user) throw new ResourceNotFound("User of given ID does not exist");
+
+    let message;
+
+    if (
+      product.quantity === 0 ||
+      product.stock_status === stockStatus.OUT_OF_STOCK
+    ) {
+      message = "Selected product is out of stock";
+    } else {
+      const cartItem = new CartItem();
+
+      cartItem.product = product;
+      cartItem.quantity = 1;
+      user.cart.cartItems.push(cartItem);
+      await this.userRepository.update(userId, { cart: user.cart });
+      message = "Successfully added product to cart";
+    }
+
+    return {
+      message,
+      items: user.cart.cartItems,
+    };
+  }
+
+  public async increaseCartProductQuantity(
+    userId: string,
+    cartItemId: string,
+    increaseQuantity: boolean,
+  ): Promise<{
+    message: string;
+    item: CartItem;
+  }> {
+    const user = await this.userRepository.findOne({
+      where: { id: userId },
+      relations: ["cart"],
+    });
+
+    if (!user) throw new ResourceNotFound("User of given ID does not exist");
+
+    const cartItem = await this.cartItemRepository.findOne({
+      where: { id: cartItemId },
+      relations: ["product"],
+    });
+    if (!cartItem)
+      throw new ResourceNotFound("Cart item with given ID does not exist");
+    else if (user.cart.cartItems.includes(cartItem))
+      throw new BadRequest("Specified cartItem not in this cart");
+    else if (cartItem.quantity === cartItem.product.quantity)
+      throw new BadRequest(
+        "cart quantity for this product cannot exceed its available quantity",
+      );
+    else if (increaseQuantity) cartItem.quantity++;
+    else cartItem.quantity--;
+
+    await this.cartItemRepository.update(cartItemId, cartItem);
+
+    return {
+      message: "Cart item quantity increased successfully",
+      item: cartItem,
+    };
+  }
+
+  public async removeProductFromCart(
+    userId: string,
+    productId: string,
+  ): Promise<{
+    message: string;
+    cartItems: CartItem[];
+  }> {
+    const product = await this.productRepository.findOne({
+      where: { id: productId },
+    });
+    if (!product)
+      throw new ResourceNotFound("Product of given ID does not exist");
+
+    const user = await this.userRepository.findOne({
+      where: { id: userId },
+      relations: ["cart"],
+    });
+    if (!user) throw new ResourceNotFound("User of given ID does not exist");
+
+    const cartItem = await this.cartItemRepository.findOneBy({ product });
+
+    if (!cartItem || !user.cart.cartItems.includes(cartItem))
+      throw new BadRequest("Invalid cart Item");
+    else user.cart.cartItems.splice(user.cart.cartItems.indexOf(cartItem), 1);
+
+    await this.userRepository.update(userId, { cart: user.cart });
+
+    return {
+      message: "Successfully removed product from cart",
+      cartItems: user.cart.cartItems,
     };
   }
 }

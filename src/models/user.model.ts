@@ -2,13 +2,15 @@ import { Column, Entity, JoinColumn, JoinTable, OneToOne } from "typeorm";
 import ExtendedBaseEntity from "../base-entity";
 import { userRole } from "../enums";
 import { Profile } from "./profile.model";
+import { Product } from "./products.model";
+import { Cart } from "./cart.model";
 
 @Entity({ name: "users" })
 export class User extends ExtendedBaseEntity {
-  @Column({ nullable: false })
+  @Column()
   first_name: string;
 
-  @Column({ nullable: false })
+  @Column()
   last_name: string;
 
   @Column({ unique: true })
@@ -39,9 +41,13 @@ export class User extends ExtendedBaseEntity {
   @Column({ nullable: false })
   otp: number;
 
-  @Column({ type: "timestamp", nullable: false })
+  @Column({ type: "timestamp" })
   otp_expiredAt: Date;
 
   @OneToOne(() => Profile, (profile) => profile.user, { cascade: true })
   profile: Profile;
+
+  @OneToOne(() => Cart, (cart) => cart.user, { cascade: true })
+  @JoinColumn()
+  cart: Cart;
 }
