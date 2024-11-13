@@ -1,4 +1,4 @@
-name: main deployment
+name: CI
 
 on:
   push:
@@ -6,31 +6,38 @@ on:
 
 jobs:
   build:
-    runs-on: [self-hosted, e-commerce]
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: /home/e-commerce-be/e-commerce
 
     steps:
-      - name: Checkout Code
+      - name: Checkout Repository
         uses: actions/checkout@v4
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+          path: /home/e-commerce-be/e-commerce
+
+      - name: Configure git safe directory
+        run: |
+          git config --global --add safe.directory /home/e-commerce-be/e-commerce
+          git config --local --get remote.origin.url
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 22
 
-      - name: Install yarn
-        run: |
-          npm install -g yarn
+      - name: Install pnpm
+        run: npm install -g pnpm
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 22
+      - name: Install Dependencies
+        run: pnpm install
 
-      - name: Install yarn
-        run: |
-          npm install -g yarn
+      - name: Run Linting
+        run: pnpm lint
+
+      - name: Build
+        run: pnpm build
 
       - name: Fetch and reset repository
         run: |
