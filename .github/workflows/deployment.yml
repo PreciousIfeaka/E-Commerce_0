@@ -56,13 +56,12 @@ jobs:
           echo ${{ secrets.APP_ENV }} > .env
           echo "pass 6"
           echo "pass 6"
-          touch /etc/systemd/system/e-commerce-api.service
-          echo server-script/e-commerce-api.service > /etc/systemd/system/e-commerce-api.service
-          systemctl daemon-reload
-          systemctl restart e-commerce-api
+          sudo cp server-script/e-commerce-api.service  /etc/systemd/system/e-commerce-api.service
+          sudo systemctl daemon-reload
+          sudo systemctl restart e-commerce-api
           echo "Waiting for service to start..."
           sleep 10
-          if systemctl is-active --quiet e-commerce-api.service; then
+          if sudo systemctl is-active --quiet e-commerce-api.service; then
             echo "Deployment successful!"
           else
             echo "Deployment failed!"
