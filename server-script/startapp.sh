@@ -1,7 +1,8 @@
 #!/bin/bash
 
-cd ~/e-commerce
-
+cd /home/e-commerce/e-commerce
+sudo mkdir -p logs
 timestamp=$(date +"%Y-%m-%d")
 
+sudo touch logs/dev${timestamp}.log
 pnpm start >> logs/dev${timestamp}.log 2>&1
