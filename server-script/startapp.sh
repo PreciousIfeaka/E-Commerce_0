@@ -1,6 +1,6 @@
 #!/bin/bash
 
-cd /home/e-commerce/e-commerce
+cd /home/e-commerce-be/e-commerce
 sudo mkdir -p logs
 timestamp=$(date +"%Y-%m-%d")
 
