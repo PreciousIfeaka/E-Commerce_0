@@ -9,8 +9,8 @@
     "start": "ts-node --transpile-only ./src/index.ts",
     "build": "tsc",
     "reset-db": "typeorm-ts-node-commonjs schema:drop -d src/data-source && typeorm-ts-node-commonjs schema:sync -d src/data-source",
-    "commitlint": "commitlint --edit",
     "lint": "eslint .",
+    "commitlint": "commitlint --edit",
     "prepare": "husky",
     "check-format": "prettier --check .",
     "check-lint": "eslint . --ext ts --ext tsx --ext js"
