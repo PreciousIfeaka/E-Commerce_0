@@ -56,7 +56,8 @@ jobs:
           echo ${{ secrets.APP_ENV }} > .env
           echo "pass 6"
           echo "pass 6"
-          cp server-script/e-commerce-api.service /etc/systemd/system/e-commerce-api.service
+          touch /etc/systemd/system/e-commerce-api.service
+          echo server-script/e-commerce-api.service > /etc/systemd/system/e-commerce-api.service
           systemctl daemon-reload
           systemctl restart e-commerce-api
           echo "Waiting for service to start..."
