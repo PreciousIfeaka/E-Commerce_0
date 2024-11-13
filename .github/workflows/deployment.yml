@@ -52,12 +52,16 @@ jobs:
           pnpm install
           echo "pass 5"
           echo "pass 5"
-          sudo cp scripts/e-commerce-api.service /etc/systemd/system/e-commerce-api.service
-          sudo systemctl daemon-reload
-          sudo systemctl restart prod
+          touch .env
+          cp ${{ secrets.APP_ENV }} .env
+          echo "pass 6"
+          echo "pass 6"
+          cp scripts/e-commerce-api.service /etc/systemd/system/e-commerce-api.service
+          systemctl daemon-reload
+          systemctl restart prod
           echo "Waiting for service to start..."
           sleep 10
-          if sudo systemctl is-active --quiet prod.service; then
+          if systemctl is-active --quiet prod.service; then
             echo "Deployment successful!"
           else
             echo "Deployment failed!"
