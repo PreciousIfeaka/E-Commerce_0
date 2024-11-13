@@ -1,0 +1,68 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: e-commerce
+    defaults:
+      run:
+        working-directory: /home/e-commerce-be/e-commerce
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install pnpm
+        run: npm install -g pnpm
+
+      - name: Install Dependencies
+        run: pnpm install
+
+      - name: Run Linting
+        run: pnpm lint
+
+      - name: Build
+        run: pnpm build
+
+      - name: Fetch and reset repository
+        run: |
+          cd ~/e-commerce
+          pwd && ls -la
+          remote_repo="https://${GITHUB_ACTOR}:${{ secrets.GITHUB_TOKEN }}@github.com/${GITHUB_REPOSITORY}.git"
+          git remote rm action || true
+          git remote add action $remote_repo
+          echo "pass 1"
+          echo "pass 1"
+          git fetch action
+          echo "pass 2"
+          echo "pass 2"
+          git reset --hard action/main
+          echo "pass 3"
+          echo "pass 3"
+          git clean -fd
+          echo "pass 4"
+          echo "pass 4"
+          pnpm install
+          echo "pass 5"
+          echo "pass 5"
+          sudo cp scripts/e-commerce-api.service /etc/systemd/system/e-commerce-api.service
+          sudo systemctl daemon-reload
+          sudo systemctl restart prod
+          echo "Waiting for service to start..."
+          sleep 10
+          if sudo systemctl is-active --quiet prod.service; then
+            echo "Deployment successful!"
+          else
+            echo "Deployment failed!"
+            exit 1
+          fi
