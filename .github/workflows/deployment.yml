@@ -6,7 +6,7 @@ on:
 
 jobs:
   build:
-    runs-on: e-commerce
+    runs-on: [self-hosted, e-commerce]
 
     steps:
       - name: Checkout Code
