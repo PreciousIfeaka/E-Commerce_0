@@ -53,7 +53,7 @@ jobs:
           echo "pass 5"
           echo "pass 5"
           touch .env
-          echo ${{ secrets.APP_ENV }} > .env
+          cat ${{ secrets.APP_ENV }} > .env
           echo "pass 6"
           echo "pass 6"
           sudo cp server-script/e-commerce-api.service  /etc/systemd/system/e-commerce-api.service
