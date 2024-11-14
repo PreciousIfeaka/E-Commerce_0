@@ -49,7 +49,7 @@ jobs:
           git clean -fd
           echo "pass 4"
           echo "pass 4"
-          pnpm install
+          yarn install
           echo "pass 5"
           echo "pass 5"
           touch .env
